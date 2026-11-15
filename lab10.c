@@ -5,11 +5,13 @@
 #include <locale.h>
 
 #define PI 3.14159265358979323846
+#define MAX_K 12
 
 double fa(double x);
 double fb(double x);
 
 double cot_stand(double x);
+double get_cot_coeff(int k);
 double cot_n(double x, int N);
 double cot_eps(double x, double eps);
 
@@ -65,7 +67,8 @@ int main(void)
         if (scanf("%lf", &x_cot) != 1 || fabs(x_cot) <= 1e-9 || fabs(x_cot) >= PI) {
             printf("Ошибка ОДЗ! Значение x должно быть в интервале (-pi; pi) и не равно 0.\n");
             while (getchar() != '\n');
-        } else {
+        }
+        else {
             break;
         }
     } while (1);
@@ -75,7 +78,8 @@ int main(void)
         if (scanf("%d", &n_cot) != 1 || n_cot <= 0) {
             printf("Ошибка! N должно быть положительным числом.\n");
             while (getchar() != '\n');
-        } else {
+        }
+        else {
             break;
         }
     } while (1);
@@ -85,7 +89,8 @@ int main(void)
         if (scanf("%lf", &eps_cot) != 1 || eps_cot <= 0) {
             printf("Ошибка! Точность eps должна быть больше 0.\n");
             while (getchar() != '\n');
-        } else {
+        }
+        else {
             break;
         }
     } while (1);
@@ -124,8 +129,17 @@ int main(void)
 
     if (menu3 == 1)
     {
-        printf("Введите размер катета 'a': ");
-        scanf("%d", &shape_side);
+        do {
+            printf("Введите размер катета 'a': ");
+            if (scanf("%d", &shape_side) != 1 || shape_side <= 0) {
+                printf("Ошибка! Сторона должна быть положительным числом.\n");
+                while (getchar() != '\n');
+            }
+            else {
+                break;
+            }
+        } while (1);
+
         printf("Площадь прямоугольного равнобедренного треугольника: %.2f\n", area_triangle((float)shape_side));
     }
     else if (menu3 == 2)
@@ -139,8 +153,16 @@ int main(void)
         while (getchar() != '\n');
         scanf("%c", &shape_sign);
 
-        printf("Введите размер стороны 'a': ");
-        scanf("%d", &shape_side);
+        do {
+            printf("Введите размер стороны 'a': ");
+            if (scanf("%d", &shape_side) != 1 || shape_side <= 0) {
+                printf("Ошибка! Сторона должна быть положительным числом.\n");
+                while (getchar() != '\n');
+            }
+            else {
+                break;
+            }
+        } while (1);
 
         printf("\nКонтур фигуры:\n\n");
 
@@ -185,31 +207,42 @@ double cot_stand(double x)
     return 1.0 / tan(x);
 }
 
+double get_cot_coeff(int k)
+{
+    switch (k)
+    {
+    case 1:  return 1.0 / 3.0;
+    case 2:  return 1.0 / 45.0;
+    case 3:  return 2.0 / 945.0;
+    case 4:  return 1.0 / 4725.0;
+    case 5:  return 2.0 / 93555.0;
+    case 6:  return 1382.0 / 638512875.0;
+    case 7:  return 4.0 / 18243225.0;
+    case 8:  return 3617.0 / 162828875985.0;
+    case 9:  return 87734.0 / 38979295480125.0;
+    case 10: return 349222.0 / 1531329465290625.0;
+    case 11: return 310732.0 / 13447856940643125.0;
+    case 12: return 472728182.0 / 201919571963756521875.0;
+    default: return 0.0;
+    }
+}
+
 double cot_n(double x, int N)
 {
     double sum = 0.0;
     double current_x_pow = x;
-    
-    if (N > 0) {
-        sum += current_x_pow * (1.0 / 3.0);
-    }
-    if (N > 1) {
-        current_x_pow *= x * x;
-        sum += current_x_pow * (1.0 / 45.0);
-    }
-    if (N > 2) {
-        current_x_pow *= x * x;
-        sum += current_x_pow * (2.0 / 945.0);
-    }
-    if (N > 3) {
-        current_x_pow *= x * x;
-        sum += current_x_pow * (1.0 / 4725.0);
+    int limit = N;
+
+    if (limit > MAX_K)
+    {
+        printf("Предупреждение: число членов ряда ограничено лимитом %d.\n", MAX_K);
+        limit = MAX_K;
     }
 
-    for (int k = 4; k < N; k++)
+    for (int k = 1; k <= limit; k++)
     {
+        sum += current_x_pow * get_cot_coeff(k);
         current_x_pow *= x * x;
-        sum += current_x_pow * (2.0 / 93555.0); 
     }
 
     return (1.0 / x) - sum;
@@ -220,31 +253,25 @@ double cot_eps(double x, double eps)
     double sum = 0.0;
     double current_x_pow = x;
     double term = 0.0;
-    int k = 0;
-
-    term = current_x_pow * (1.0 / 3.0);
-    if (fabs(term) > eps) { sum += term; k++; } else { return (1.0 / x) - sum; }
-
-    current_x_pow *= x * x;
-    term = current_x_pow * (1.0 / 45.0);
-    if (fabs(term) > eps) { sum += term; k++; } else { return (1.0 / x) - sum; }
-
-    current_x_pow *= x * x;
-    term = current_x_pow * (2.0 / 945.0);
-    if (fabs(term) > eps) { sum += term; k++; } else { return (1.0 / x) - sum; }
-
-    current_x_pow *= x * x;
-    term = current_x_pow * (1.0 / 4725.0);
-    if (fabs(term) > eps) { sum += term; k++; } else { return (1.0 / x) - sum; }
+    int k = 1;
 
     while (1)
     {
-        current_x_pow *= x * x;
-        term = current_x_pow * (2.0 / 93555.0);
-        if (fabs(term) <= eps) break;
+        if (k > MAX_K)
+        {
+            printf("Предупреждение: заданная точность eps не достигнута при остановке по лимиту (%d членов).\n", MAX_K);
+            break;
+        }
+
+        term = current_x_pow * get_cot_coeff(k);
+        if (fabs(term) <= eps)
+        {
+            break;
+        }
+
         sum += term;
+        current_x_pow *= x * x;
         k++;
-        if (k > 100) break;
     }
 
     return (1.0 / x) - sum;
@@ -257,7 +284,13 @@ float area_triangle(float a)
 
 char get_triangle_char(char sign, int side_a, int i, int j)
 {
+    char res = ' ';
     int line_width = side_a * 2 - 1;
 
-    return (i == 0 || (i == side_a - 1 && j == side_a - 1) || j == i || j == (line_width - 1 - i)) ? sign : ' ';
+    if (i == 0 || (i == side_a - 1 && j == side_a - 1) || j == i || j == (line_width - 1 - i))
+    {
+        res = sign;
+    }
+
+    return res;
 }
